@@ -10,6 +10,7 @@ class AjaxMap extends CI_Model {
     private $map = array(
         'test' => array(
             'function' => 'test',
+            'auth' => true,
             'cors' => array(
                 'http://example.com:80',
                 'https://example.com:80',
@@ -36,6 +37,19 @@ class AjaxMap extends CI_Model {
                         // 'param3',
                         // 'param4',
                     )
+                )
+            )
+        ),
+        'signin' => array(
+            'function' => 'signin',
+            'auth' => false,
+            'cors' => array(),
+            'params' => array(
+                'post' => array(
+                    'mandatory' => array(
+                        'login',
+                        'password',
+                    ),
                 )
             )
         ),

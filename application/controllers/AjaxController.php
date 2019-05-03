@@ -16,10 +16,8 @@ class AjaxController extends CI_Controller {
         //     $this->stdJSONMessage(['error' => 'AJAX access only'], 403);
         //     die;
         // } else {
-            $this->load->model('Ajax', 'ajax');
             $this->load->model('AjaxMap', 'map');
         // }
-        $this->load->helper('my_helper');
     }
 
     public function main() {
@@ -45,19 +43,45 @@ class AjaxController extends CI_Controller {
                         $this->stdJSONMessage(['error' => 'Bad request parameters'], 400);
                         
                     } else {
-                        // Exécuter le Query Builder retourné par la méthode de mapping
-                        if (empty($ret = $this->ajax->{$mapping['function']}())) {
-                            log_message('error', 'Unable to get data with '.$mapping['function'].'.');
-                            $this->stdJSONMessage(null, 404);
+                        // Checker le token
+                        if (($userData = $this->checkToken($mapping)) === false) {
+                            log_message('error', 'Token error for '.$this->input->ip_address().'.');
+                            $this->stdJSONMessage(['error' => 'Token error'], 403);
                             
                         } else {
-                            // Retourner la réponse en JSON, avec les bon headers pour le CORS
-                            $this->stdJSONMessage($ret);
+                            $this->load->model('Ajax', 'ajax');
+                            $this->ajax->setUserData($userData);
+                            
+                            // Exécuter le Query Builder retourné par la méthode de mapping
+                            if (empty($ret = $this->ajax->{$mapping['function']}())) {
+                                log_message('error', 'Unable to get data with '.$mapping['function'].'.');
+                                $this->stdJSONMessage(null, 404);
+                                
+                            } else {
+                                // Retourner la réponse en JSON, avec les bon headers pour le CORS
+                                $this->writeAuthorization($this->ajax->getAuthorizationData());
+                                $this->stdJSONMessage($ret);
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    protected function checkToken($mapping) {
+        if (empty($mapping)) return false;
+        if (!isset($mapping['auth']) || !$mapping['auth']) return true;
+        
+        $token = $this->input->get_request_header('Authorization');
+        if (empty($token)) return false;
+
+        return AUTHORIZATION::validateToken($token);
+    }
+
+    protected function writeAuthorization($authorization) {
+        if (!empty($authorization) && is_array($authorization)) 
+            $this->output->set_header('Authorization: '.AUTHORIZATION::generateToken($authorization));
     }
 
     protected function checkParams(Array $mapping = null) {
@@ -106,9 +130,7 @@ class AjaxController extends CI_Controller {
 
         if (empty($origin)) return true;
 
-        $external_allowed_origins = array(
-            'https://example.com',
-        );
+        $external_allowed_origins = array();
 
         $local_origins = array(
             'http://localhost',
