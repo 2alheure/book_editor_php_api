@@ -40,6 +40,7 @@ class AjaxController extends CI_Controller {
                 if ($this->checkCORS($mapping)) {
                     // Checker les paramètres de la requête
                     if (!$this->checkParams($mapping)) {
+                        log_message('error', 'Bad parameters for method '.$segment.'. Got GET ['.implode(', ', array_keys($this->input->get())).'] and POST ['.implode(', ', array_keys($this->input->post())).']');
                         $this->stdJSONMessage(['error' => 'Bad request parameters'], 400);
                         
                     } else {
@@ -59,8 +60,10 @@ class AjaxController extends CI_Controller {
                                 
                             } else {
                                 // Retourner la réponse en JSON, avec les bon headers pour le CORS
-                                $this->writeAuthorization($this->ajax->getAuthorizationData());
-                                $this->stdJSONMessage($ret);
+                                $tk = $this->writeAuthorization($this->ajax->getAuthorizationData());
+                                
+                                if ($segment == 'signin') $ret['token'] = $tk;
+                                $this->stdJSONMessage($ret, 200, true);
                             }
                             log_message('error', $this->db->last_query());
                         }
@@ -81,8 +84,10 @@ class AjaxController extends CI_Controller {
     }
 
     protected function writeAuthorization($authorization) {
-        if (!empty($authorization) && is_array($authorization)) 
-            $this->output->set_header('Authorization: '.AUTHORIZATION::generateToken($authorization));
+        if (!empty($authorization) && is_array($authorization)) {
+            $this->output->set_header('Authorization: '.($tk = AUTHORIZATION::generateToken($authorization)));
+            return $tk;
+        }
     }
 
     protected function checkParams(Array $mapping = null) {
@@ -158,11 +163,13 @@ class AjaxController extends CI_Controller {
         return false;
     }
 
-    protected function stdJSONMessage($msg = null, $code = 200) {
+    protected function stdJSONMessage($msg = null, $code = 200, $status = false) {
         $this->output->set_content_type('application/json');
         $this->output->set_status_header($code);
 
-        if (!empty($msg)) echo json_encode($msg);
-        else echo '{}';
+        if (!empty($msg)) {
+            if (!isset($msg['status'])) $msg['status'] = $status;
+            echo json_encode($msg, JSON_NUMERIC_CHECK);
+        } else echo json_encode(['status' => null]);
     }
 }

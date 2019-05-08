@@ -21,6 +21,10 @@ class Ajax extends CI_Model {
         return $this->sessionData;
     }
 
+    protected function isLoggedIn() {
+        return !empty($this->sessionData) && isset($this->sessionData['id']);
+    }
+
     /**
      * Example of method which can be used. Each one has the same pattern.
      * It can use the body and url parameters.
@@ -45,44 +49,36 @@ class Ajax extends CI_Model {
                       ->get()
                       ->row_array();
 
-        if (empty($q)) return ['error' => 'Invalid identifiers.'];
+        if (empty($q)) return ['status' => false, 'error' => 'Mauvais identifiants.'];
         else {
             $this->sessionData = ['id' => $q['id']];
-            return ['success' => 'Auth success.', 'id' => $q['id']];
+            return ['status' => true, 'id' => $q['id']];
         }
     }
 
     public function user() {
+        if ($this->input->get('user_id') === "me") {
+            if ($this->isLoggedIn()) $userID = $this->sessionData['id'];
+            else return ['status' => false, 'error' => 'Vous n\'êtes pas identifié(e). Vous ne pouvez accéder à cette page.'];
+        } else $userID = $this->input->get('user_id');
+
         $user = $this->db->select('users.id, users.pseudo, users.image')
                          ->select('COUNT(DISTINCT book_contributors.book_id) nbBooks')
-                         ->select('GROUP_CONCAT(DISTINCT book_contributors.book_id) books')
+                         ->select('COUNT(DISTINCT book_readers.id) nbReads')
+                         ->select('SUM(DISTINCT books.downloads) nbDL')
+                         ->select('COUNT(DISTINCT reviews.id) nbComments')
+                         ->select('AVG(reviews.note) note')
                          ->from('users')
                          ->join('book_contributors', 'book_contributors.user_id = users.id', 'left')
-                         ->join('reviews', 'reviews.user_id = users.id', 'left')
-                         ->where('users.id', $this->input->get('user_id'))
+                         ->join('books', 'book_contributors.book_id = books.id', 'left')
+                         ->join('book_readers', 'book_readers.book_id = books.id', 'left')
+                         ->join('reviews', 'reviews.book_id = books.id OR reviews.user_id = users.id', 'left')
+                         ->where('users.id', $userID)
                          ->group_by('book_contributors.user_id')
                          ->get()
                          ->row_array();
 
-        $books = explode(',', $user['books']);
-
-        $booksStats = $this->db->select('')
-                               ->select('')
-                               ->from()
-                               ->where()
-                               ->get()
-                               ->row_array();
-
-        return array(
-            'id' => $user['id'],
-            'pseudo' => $user['pseudo'],
-            'image' => $user['image'],
-            'nbBooks' => sizeof($books),
-            'nbReads' => $user['nbReads'],
-            'nbDL' => $user['downloads'],
-            'nbComments' => $user['nbComments'],
-            'note' => $user['note'],
-        );
+        return $user;
     }
 
     public function book() {
@@ -92,7 +88,7 @@ class Ajax extends CI_Model {
                          ->select('COUNT(DISTINCT reviews.user_id) nbComments')
                          ->select('AVG(DISTINCT reviews.note) note')
                          ->from('books')
-                         ->join('book_contributors', 'book_contributors.user_id = books.id', 'left')
+                         ->join('book_contributors', 'book_contributors.book_id = books.id', 'left')
                          ->join('users', 'book_contributors.user_id = users.id', 'left')
                          ->join('reviews', 'reviews.book_id = books.id', 'left')
                          ->join('book_readers', 'book_readers.book_id = books.id', 'left')
@@ -113,12 +109,28 @@ class Ajax extends CI_Model {
                 'image' => $book['author_image'],
                 'nbBooks' => $this->db->query('SELECT COUNT(DISTINCT book_contributors.book_id) a FROM book_contributors WHERE user_id = '.$book['author_id'])->row_array()['a'],
             ),
-            'nbReads' => $book['nbReads'],
-            'nbDL' => $book['downloads'],
-            'nbComments' => $book['nbComments'],
-            'note' => $book['note'],
+            'nbReads' => empty($book['nbReads'])? 0 : $book['nbReads'],
+            'nbDL' => empty($book['downloads'])? 0 : $book['downloads'],
+            'nbComments' => empty($book['nbComments'])? 0 : $book['nbComments'],
+            'note' => empty($book['note'])? 0 : $book['note'],
             'isMine' => !empty($this->sessionData) && $this->sessionData['id'] == $book['author_id']
         );
     }
 
+    public function homeBooks() {
+        $recos = $this->db->select('GROUP_CONCAT(CONCAT_WS(\' | \', title, subtitle)) recos')
+                         ->from('books')
+                         ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
+                         ->group_by('books.id');
+        
+        $this->sessionData['id'] = 4;               
+
+        if ($this->isLoggedIn()) {
+            $recos->where('book_contributors.user_id <> '.$this->sessionData['id'])
+                  ->join('user_subscribers', 'user_subscribers.user_id = book_contributors.user_id', 'left')
+                  ->where('user_subscribers.subscriber_id <> '.$this->sessionData['id']);
+        }
+
+        return $recos->get()->result_array();
+    }
 }

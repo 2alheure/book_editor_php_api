@@ -73,6 +73,11 @@ class AjaxMap extends CI_Model {
                 )
             )
         ),
+        'homeBooks' => array(
+            'auth' => false,
+            'cors' => array(),
+            'params' => array()
+        ),
 
     );
 
