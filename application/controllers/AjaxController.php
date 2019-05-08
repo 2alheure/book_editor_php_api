@@ -45,7 +45,7 @@ class AjaxController extends CI_Controller {
                     } else {
                         // Checker le token
                         if (($userData = $this->checkToken($mapping)) === false) {
-                            log_message('error', 'Token error for '.$this->input->ip_address().'.');
+                            log_message('error', 'Invalid token error for '.$this->input->ip_address().'.');
                             $this->stdJSONMessage(['error' => 'Token error'], 403);
                             
                         } else {
@@ -53,8 +53,8 @@ class AjaxController extends CI_Controller {
                             $this->ajax->setUserData($userData);
                             
                             // Exécuter le Query Builder retourné par la méthode de mapping
-                            if (empty($ret = $this->ajax->{$mapping['function']}())) {
-                                log_message('error', 'Unable to get data with '.$mapping['function'].'.');
+                            if (empty($ret = $this->ajax->{$segment}())) {
+                                log_message('error', 'Unable to get data with '.$segment.'.');
                                 $this->stdJSONMessage(null, 404);
                                 
                             } else {
@@ -62,6 +62,7 @@ class AjaxController extends CI_Controller {
                                 $this->writeAuthorization($this->ajax->getAuthorizationData());
                                 $this->stdJSONMessage($ret);
                             }
+                            log_message('error', $this->db->last_query());
                         }
                     }
                 }
