@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le :  mer. 08 mai 2019 à 16:49
+-- Généré le :  jeu. 09 mai 2019 à 17:20
 -- Version du serveur :  5.7.23
 -- Version de PHP :  7.2.10
 
@@ -80,8 +80,8 @@ CREATE TABLE IF NOT EXISTS `books` (
   `description` text COLLATE utf8_bin,
   `version` varchar(255) COLLATE utf8_bin DEFAULT NULL,
   `downloads` int(11) NOT NULL DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
@@ -90,13 +90,13 @@ CREATE TABLE IF NOT EXISTS `books` (
 --
 
 INSERT INTO `books` (`id`, `title`, `subtitle`, `image`, `description`, `version`, `downloads`, `created_at`, `updated_at`) VALUES
-(1, 'Alice au Pays des Merveilles', NULL, 'https://media.istockphoto.com/illustrations/alices-adventures-in-wonderland-illustration-id185304146', 'Alice s\'ennuie auprès de sa sœur qui lit un livre (« sans images, ni dialogues ») tandis qu\'elle ne fait rien. « À quoi bon un livre sans images, ni dialogues ? », se demande Alice. Mais voilà qu\'un lapin blanc aux yeux roses vêtu d\'une redingote avec une montre à gousset à y ranger passe près d\'elle en courant. Cela ne l\'étonne pas le moins du monde. Pourtant, lorsqu\'elle le voit sortir une montre de sa poche et s\'écrier : « Je suis en retard ! En retard ! En retard ! », elle se dit que décidément ce lapin a quelque chose de spécial. En entrant derrière lui dans son terrier, elle fait une chute presque interminable qui l\'emmène dans un monde aux antipodes du sien. Elle va rencontrer une galerie de personnages retors et se trouver confrontée au paradoxe, à l\'absurde et au bizarre…', NULL, 0, NULL, NULL),
-(2, 'C\'est l\'histoire de ma vie', 'Chapitre I : mon enfance', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, NULL, NULL),
-(3, 'C\'est l\'histoire de ma vie', 'Chapitre II : mon adolescence', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 10, NULL, NULL),
-(4, 'C\'est l\'histoire de ma vie', 'Chapitre III : ma vie adulte', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit voluptatum neque dolorem sit, maxime quos! Blanditiis in tempore error, architecto soluta dolorem, dolore aliquam incidunt eaque ab quia maiores quas! Magni odit veniam blanditiis nihil officiis debitis, mollitia nobis voluptatem praesentium architecto neque consectetur. Obcaecati esse vel aliquam voluptatum ad expedita saepe, sit voluptate necessitatibus architecto. Soluta beatae deserunt harum? Ipsum delectus officia repudiandae tempora unde quod ex, cupiditate aut facere ab animi itaque numquam magni, blanditiis, laudantium recusandae quas commodi voluptatem? Ad quidem dicta beatae earum voluptates deleniti! Possimus. Quo esse excepturi ipsum a laudantium ex incidunt dolorem perspiciatis. Quia quisquam ipsam, dolorum tempore reiciendis corporis dolore nobis facere temporibus, deleniti, eum libero. Tempora explicabo qui quo debitis deserunt? Non sapiente odit voluptatibus repudiandae cumque recusandae, nemo corrupti aut aperiam, necessitatibus quisquam alias laboriosam fuga! Placeat sunt qui officia quae culpa libero eveniet? Molestias ullam nihil voluptates labore odio.', NULL, 5, NULL, NULL),
-(5, 'C\'est l\'histoire de ta vie', 'Chapitre I : ton enfance', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, NULL, NULL),
-(6, 'C\'est l\'histoire de ta vie', 'Chapitre II : ton adolescence', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, NULL, NULL),
-(7, 'C\'est l\'histoire de ta vie', 'Chapitre III : ta vie adulte', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, NULL, NULL);
+(1, 'Alice au Pays des Merveilles', NULL, 'https://media.istockphoto.com/illustrations/alices-adventures-in-wonderland-illustration-id185304146', 'Alice s\'ennuie auprès de sa sœur qui lit un livre (« sans images, ni dialogues ») tandis qu\'elle ne fait rien. « À quoi bon un livre sans images, ni dialogues ? », se demande Alice. Mais voilà qu\'un lapin blanc aux yeux roses vêtu d\'une redingote avec une montre à gousset à y ranger passe près d\'elle en courant. Cela ne l\'étonne pas le moins du monde. Pourtant, lorsqu\'elle le voit sortir une montre de sa poche et s\'écrier : « Je suis en retard ! En retard ! En retard ! », elle se dit que décidément ce lapin a quelque chose de spécial. En entrant derrière lui dans son terrier, elle fait une chute presque interminable qui l\'emmène dans un monde aux antipodes du sien. Elle va rencontrer une galerie de personnages retors et se trouver confrontée au paradoxe, à l\'absurde et au bizarre…', NULL, 0, '2019-05-09 09:46:34', '2019-05-09 09:46:34'),
+(2, 'C\'est l\'histoire de ma vie', 'Chapitre I : mon enfance', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, '2019-05-09 09:46:34', '2019-05-09 09:46:34'),
+(3, 'C\'est l\'histoire de ma vie', 'Chapitre II : mon adolescence', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 10, '2019-05-09 09:46:34', '2019-05-09 09:46:34'),
+(4, 'C\'est l\'histoire de ma vie', 'Chapitre III : ma vie adulte', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit voluptatum neque dolorem sit, maxime quos! Blanditiis in tempore error, architecto soluta dolorem, dolore aliquam incidunt eaque ab quia maiores quas! Magni odit veniam blanditiis nihil officiis debitis, mollitia nobis voluptatem praesentium architecto neque consectetur. Obcaecati esse vel aliquam voluptatum ad expedita saepe, sit voluptate necessitatibus architecto. Soluta beatae deserunt harum? Ipsum delectus officia repudiandae tempora unde quod ex, cupiditate aut facere ab animi itaque numquam magni, blanditiis, laudantium recusandae quas commodi voluptatem? Ad quidem dicta beatae earum voluptates deleniti! Possimus. Quo esse excepturi ipsum a laudantium ex incidunt dolorem perspiciatis. Quia quisquam ipsam, dolorum tempore reiciendis corporis dolore nobis facere temporibus, deleniti, eum libero. Tempora explicabo qui quo debitis deserunt? Non sapiente odit voluptatibus repudiandae cumque recusandae, nemo corrupti aut aperiam, necessitatibus quisquam alias laboriosam fuga! Placeat sunt qui officia quae culpa libero eveniet? Molestias ullam nihil voluptates labore odio.', NULL, 5, '2019-05-09 09:46:34', '2019-05-09 09:46:34'),
+(5, 'C\'est l\'histoire de ta vie', 'Chapitre I : ton enfance', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, '2019-05-09 09:46:34', '2019-05-09 09:46:34'),
+(6, 'C\'est l\'histoire de ta vie', 'Chapitre II : ton adolescence', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, '2019-05-09 09:46:34', '2019-05-09 09:46:34'),
+(7, 'C\'est l\'histoire de ta vie', 'Chapitre III : ta vie adulte', 'https://images.leslibraires.ca/books/9782843048067/front/9782843048067_large.jpg', NULL, NULL, 0, '2019-05-09 09:46:34', '2019-05-09 09:46:34');
 
 -- --------------------------------------------------------
 
