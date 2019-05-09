@@ -38,6 +38,8 @@ class AjaxController extends CI_Controller {
             } else {
                 // Checker domaine (CORS)
                 if ($this->checkCORS($mapping)) {
+                    if ($this->input->method(true) == 'OPTIONS') return;
+                    
                     // Checker les paramètres de la requête
                     if (!$this->checkParams($mapping)) {
                         log_message('error', 'Bad parameters for method '.$segment.'. Got GET ['.implode(', ', array_keys($this->input->get())).'] and POST ['.implode(', ', array_keys($this->input->post())).']');
@@ -70,31 +72,6 @@ class AjaxController extends CI_Controller {
                             log_message('error', $this->db->last_query());
                         }
                     }
-                }
-            }
-        }
-    }
-
-    public function options() {
-        pr('passage options');
-        // Récupérer requête
-        $segment = $this->uri->segment(1);
-
-
-        if (empty($segment)) {
-            log_message('error', 'Empty segment.');
-            $this->stdJSONMessage(['error' => 'Bad request'], 400);
-            
-        } else {
-            // Récupérer le mapping pour la requête
-            if (!($mapping = $this->map->getMap($segment))) {
-                log_message('error', 'Unable to get mapping for '.$segment.'.');
-                $this->stdJSONMessage(['error' => 'Not found'], 404);
-                
-            } else {
-                // Checker domaine (CORS)
-                if (!$this->checkCORS($mapping)) {
-                    log_message('error', 'CORS denied for '.$this->input->ip_address().' on '.$segment);
                 }
             }
         }
