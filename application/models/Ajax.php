@@ -22,7 +22,8 @@ class Ajax extends CI_Model {
     }
 
     protected function isLoggedIn() {
-        return !empty($this->sessionData) && isset($this->sessionData['id']);
+        if (!empty($this->sessionData) && isset($this->sessionData['id'])) return $this->sessionData['id'];
+        else return false;
     }
 
     /**
@@ -58,8 +59,7 @@ class Ajax extends CI_Model {
 
     public function user() {
         if ($this->input->get('user_id') === "me") {
-            if ($this->isLoggedIn()) $userID = $this->sessionData['id'];
-            else return ['status' => false, 'error' => 'Vous n\'êtes pas identifié(e). Vous ne pouvez accéder à cette page.'];
+            if (!($userID = $this->isLoggedIn())) return ['status' => false, 'error' => 'Vous n\'êtes pas identifié(e). Vous ne pouvez accéder à cette page.'];
         } else $userID = $this->input->get('user_id');
 
         $user = $this->db->select('users.id, users.pseudo, users.image')
@@ -118,19 +118,65 @@ class Ajax extends CI_Model {
     }
 
     public function homeBooks() {
-        $recos = $this->db->select('GROUP_CONCAT(CONCAT_WS(\' | \', title, subtitle)) recos')
-                         ->from('books')
-                         ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
-                         ->group_by('books.id');
-        
-        $this->sessionData['id'] = 4;               
+        $this->sessionData['id'] = 4;
+        $userID = $this->isLoggedIn();
+        $recos = array();
+        $abos = array();
+        $reads = array();
+        $mines = array();
 
-        if ($this->isLoggedIn()) {
-            $recos->where('book_contributors.user_id <> '.$this->sessionData['id'])
-                  ->join('user_subscribers', 'user_subscribers.user_id = book_contributors.user_id', 'left')
-                  ->where('user_subscribers.subscriber_id <> '.$this->sessionData['id']);
+        if ($userID) {
+            $mines = $this->db->select('books.id, books.title, books.subtitle, books.image')
+                              ->select('users.id AS author_id, users.pseudo AS author')
+                              ->from('books')
+                              ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
+                              ->join('users', 'book_contributors.user_id = users.id', 'left')
+                              ->where('book_contributors.user_id', $userID)
+                              ->order_by('books.updated_at', 'DESC')
+                              ->distinct()
+                              ->get()
+                              ->result_array();
+
+            $reads = $this->db->select('books.id, books.title, books.subtitle, books.image')
+                              ->select('users.id AS author_id, users.pseudo AS author')
+                              ->from('books')
+                              ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
+                              ->join('users', 'book_contributors.user_id = users.id', 'left')
+                              ->join('book_readers', 'book_readers.user_id = users.id', 'left')     // Ne fonctionnera pas
+                              ->where('book_readers.user_id', $userID)
+                              ->order_by('book_readers.read_at', 'DESC')
+                              ->get()
+                              ->result_array();
+
+            $abos = $this->db->select('books.id, books.title, books.subtitle, books.image')
+                              ->select('users.id AS author_id, users.pseudo AS author')
+                              ->from('books')
+                              ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
+                              ->join('users', 'book_contributors.user_id = users.id', 'left')
+                              ->join('book_subscribers', 'book_subscribers.user_id = users.id', 'left')     // Ne fonctionnera pas
+                              ->where('book_subscribers.subscriber_id', $userID)
+                              ->order_by('books.created_at', 'DESC')
+                              ->get()
+                              ->result_array();
         }
 
-        return $recos->get()->result_array();
+        $not_in = array_merge(array_column($mines, 'id'),array_column($reads, 'id'),array_column($abos, 'id'));
+
+        $abos = $this->db->select('books.id, books.title, books.subtitle, books.image')
+                         ->select('users.id AS author_id, users.pseudo AS author')
+                         ->from('books')
+                         ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
+                         ->join('users', 'book_contributors.user_id = users.id', 'left')
+                         ->where_not_in('books.id', $not_in)
+                         ->order_by('books.created_at', 'DESC')
+                         ->get()
+                         ->result_array();
+
+        return array(
+            'booksReco' => $recos,
+            'booksSub' => $abos,
+            'booksRead' => $reads,
+            'booksMine' => $mines
+        );
     }
 }
