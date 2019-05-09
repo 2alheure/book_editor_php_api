@@ -53,6 +53,9 @@ class AjaxController extends CI_Controller {
                             $this->load->model('Ajax', 'ajax');
                             $this->ajax->setUserData($userData);
                             
+                            log_message('error', print_r($userData, true));
+                            log_message('error', 'ID de l\'utilisateur : '.$userData['id']);
+
                             // Exécuter le Query Builder retourné par la méthode de mapping
                             if (empty($ret = $this->ajax->{$segment}())) {
                                 log_message('error', 'Unable to get data with '.$segment.'.');
@@ -61,13 +64,37 @@ class AjaxController extends CI_Controller {
                             } else {
                                 // Retourner la réponse en JSON, avec les bon headers pour le CORS
                                 $tk = $this->writeAuthorization($this->ajax->getAuthorizationData());
-                                
                                 if ($segment == 'signin') $ret['token'] = $tk;
                                 $this->stdJSONMessage($ret, 200, true);
                             }
                             log_message('error', $this->db->last_query());
                         }
                     }
+                }
+            }
+        }
+    }
+
+    public function options() {
+        pr('passage options');
+        // Récupérer requête
+        $segment = $this->uri->segment(1);
+
+
+        if (empty($segment)) {
+            log_message('error', 'Empty segment.');
+            $this->stdJSONMessage(['error' => 'Bad request'], 400);
+            
+        } else {
+            // Récupérer le mapping pour la requête
+            if (!($mapping = $this->map->getMap($segment))) {
+                log_message('error', 'Unable to get mapping for '.$segment.'.');
+                $this->stdJSONMessage(['error' => 'Not found'], 404);
+                
+            } else {
+                // Checker domaine (CORS)
+                if (!$this->checkCORS($mapping)) {
+                    log_message('error', 'CORS denied for '.$this->input->ip_address().' on '.$segment);
                 }
             }
         }
@@ -80,7 +107,7 @@ class AjaxController extends CI_Controller {
         $token = $this->input->get_request_header('Authorization');
         if (empty($token)) return false;
 
-        return AUTHORIZATION::validateToken($token);
+        return JWT::decode($token, $this->config->item('jwt_key'));
     }
 
     protected function writeAuthorization($authorization) {
@@ -154,6 +181,7 @@ class AjaxController extends CI_Controller {
         );
 
         if (in_array($origin, array_merge($mapping['cors'], $local_origins, $external_allowed_origins))) {
+            $this->output->set_header('Access-Control-Allow-Headers: Authorization');
             $this->output->set_header('Access-Control-Allow-Origin: '.$origin);
             $this->output->set_header('Access-Control-Max-Age: 3600');
             return true;
