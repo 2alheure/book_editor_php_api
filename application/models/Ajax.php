@@ -14,7 +14,7 @@ class Ajax extends CI_Model {
     }
 
     public function setUserData($userData) {
-        $this->user = $userData;
+        $this->sessionData = $userData;
     }
 
     public function getAuthorizationData() {
@@ -119,6 +119,7 @@ class Ajax extends CI_Model {
 
     public function homeBooks() {
         $userID = $this->isLoggedIn();
+        log_message('error', 'userID homeBooks: '.$userID);
         $recos = array();
         $abos = array();
         $reads = array();
@@ -199,5 +200,28 @@ class Ajax extends CI_Model {
         ));
 
 
+    }
+
+    public function bookEdit() {
+        if (!empty($bid = $this->input->post('id'))) {
+            $book = $this->input->post();
+            
+            $b = $this->db->where('books.id', $book['id'])
+                          ->update('books', $book);
+        }
+
+        if (isset($b) && $b || !empty($bid = $this->input->get('book_id'))) {
+            log_message('error', 'entrée requête b');
+            $a = $this->db->select('books.id, books.title, books.subtitle, books.image, books.description')
+                            ->from('books')
+                            ->join('book_contributors', 'book_contributors.book_id = books.id', 'left')
+                            ->where('book_contributors.user_id', $this->sessionData['id'])
+                            ->where('books.id', $bid)
+                            ->get()
+                            ->row_array();
+
+            log_message('error', 'a: '.print_r($a, true));
+            return $a;
+        } else return ['status' => false, 'error' => 'Une erreur est survenue pendant le traitement de la requête. Veuillez réessayer plus tard.'];
     }
 }

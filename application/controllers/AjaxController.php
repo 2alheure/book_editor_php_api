@@ -55,9 +55,7 @@ class AjaxController extends CI_Controller {
                             $this->load->model('Ajax', 'ajax');
                             $this->ajax->setUserData($userData);
                             
-                            log_message('error', print_r($userData, true));
-                            log_message('error', 'ID de l\'utilisateur : '.$userData['id']);
-
+                            
                             // Exécuter le Query Builder retourné par la méthode de mapping
                             if (empty($ret = $this->ajax->{$segment}())) {
                                 log_message('error', 'Unable to get data with '.$segment.'.');
@@ -65,11 +63,15 @@ class AjaxController extends CI_Controller {
                                 
                             } else {
                                 // Retourner la réponse en JSON, avec les bon headers pour le CORS
-                                $tk = $this->writeAuthorization($this->ajax->getAuthorizationData());
-                                if ($segment == 'signin') $ret['token'] = $tk;
+                                if ($segment == 'signin') {
+                                    $tk = $this->writeAuthorization($this->ajax->getAuthorizationData());
+                                    $ret['token'] = $tk;
+                                }
+
                                 $this->stdJSONMessage($ret, 200, true);
                             }
                             log_message('error', $this->db->last_query());
+                            log_message('error', '-------------------------------------------------------------------------------------');
                         }
                     }
                 }
@@ -79,12 +81,13 @@ class AjaxController extends CI_Controller {
 
     protected function checkToken($mapping) {
         if (empty($mapping)) return false;
-        if (!isset($mapping['auth']) || !$mapping['auth']) return true;
         
         $token = $this->input->get_request_header('Authorization');
-        if (empty($token)) return false;
 
-        return JWT::decode($token, $this->config->item('jwt_key'));
+        if (empty($token) || empty($t = (array) JWT::decode($token, $this->config->item('jwt_key'))))
+            return !isset($mapping['auth']) || !$mapping['auth'];
+        else 
+            return $t;
     }
 
     protected function writeAuthorization($authorization) {
@@ -158,7 +161,7 @@ class AjaxController extends CI_Controller {
         );
 
         if (in_array($origin, array_merge($mapping['cors'], $local_origins, $external_allowed_origins))) {
-            $this->output->set_header('Access-Control-Allow-Headers: Authorization');
+            $this->output->set_header('Access-Control-Allow-Headers: Authorization, X-Requested-With');
             $this->output->set_header('Access-Control-Allow-Origin: '.$origin);
             $this->output->set_header('Access-Control-Max-Age: 3600');
             return true;
