@@ -105,6 +105,32 @@ class AjaxMap extends CI_Model {
                 )
             )
         ),
+        'search' => array(
+            'auth' => false,
+            'cors' => array(),
+            'params' => array(
+                'post' => array(
+                    'mandatory' => array(),
+                    'optional' => array(
+                        'generic',
+                        'title',
+                        'subtitle',
+                        'author',
+                    ),
+                )
+            )
+        ),
+        'read' => array(
+            'auth' => false,
+            'cors' => array(),
+            'params' => array(
+                'post' => array(
+                    'mandatory' => array(
+                        'book_id',
+                    ),
+                )
+            )
+        ),
 
     );
 

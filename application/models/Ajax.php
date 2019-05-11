@@ -34,7 +34,7 @@ class Ajax extends CI_Model {
      */
     public function test() {
         return $this->db->select('*')
-                        ->from('users')
+                        ->from('be_users')
                         ->order_by('id')
                         ->get()
                         ->result_array();
@@ -42,7 +42,7 @@ class Ajax extends CI_Model {
 
     public function signin() {
         $q = $this->db->select('id')
-                      ->from('users')
+                      ->from('be_users')
                       ->where([
                           'login' => $this->input->post('login'),
                           'password' => $this->input->post('password'),
@@ -62,19 +62,19 @@ class Ajax extends CI_Model {
             if (!($userID = $this->isLoggedIn())) return ['status' => false, 'error' => 'Vous n\'êtes pas identifié(e). Vous ne pouvez accéder à cette page.'];
         } else $userID = $this->input->get('user_id');
 
-        $user = $this->db->select('users.id, users.pseudo, users.image')
-                         ->select('COUNT(DISTINCT book_contributors.book_id) nbBooks')
-                         ->select('COUNT(DISTINCT book_readers.id) nbReads')
-                         ->select('SUM(DISTINCT books.downloads) nbDL')
-                         ->select('COUNT(DISTINCT reviews.id) nbComments')
-                         ->select('AVG(reviews.note) note')
-                         ->from('users')
-                         ->join('book_contributors', 'book_contributors.user_id = users.id', 'left')
-                         ->join('books', 'book_contributors.book_id = books.id', 'left')
-                         ->join('book_readers', 'book_readers.book_id = books.id', 'left')
-                         ->join('reviews', 'reviews.book_id = books.id OR reviews.user_id = users.id', 'left')
-                         ->where('users.id', $userID)
-                         ->group_by('book_contributors.user_id')
+        $user = $this->db->select('be_users.id, be_users.pseudo, be_users.image')
+                         ->select('COUNT(DISTINCT be_book_contributors.book_id) nbBooks')
+                         ->select('COUNT(DISTINCT be_book_readers.id) nbReads')
+                         ->select('SUM(DISTINCT be_books.downloads) nbDL')
+                         ->select('COUNT(DISTINCT be_reviews.id) nbComments')
+                         ->select('AVG(be_reviews.note) note')
+                         ->from('be_users')
+                         ->join('be_book_contributors', 'be_book_contributors.user_id = be_users.id', 'left')
+                         ->join('be_books', 'be_book_contributors.book_id = be_books.id', 'left')
+                         ->join('be_book_readers', 'be_book_readers.book_id = be_books.id', 'left')
+                         ->join('be_reviews', 'be_reviews.book_id = be_books.id OR be_reviews.user_id = be_users.id', 'left')
+                         ->where('be_users.id', $userID)
+                         ->group_by('be_book_contributors.user_id')
                          ->get()
                          ->row_array();
 
@@ -82,18 +82,18 @@ class Ajax extends CI_Model {
     }
 
     public function book() {
-        $book = $this->db->select('books.id, books.title, books.subtitle, books.image, books.description, books.downloads')
-                         ->select('users.id AS author_id, users.pseudo, users.image AS author_image')
-                         ->select('COUNT(DISTINCT book_readers.user_id) nbReads')
-                         ->select('COUNT(DISTINCT reviews.user_id) nbComments')
-                         ->select('AVG(DISTINCT reviews.note) note')
-                         ->from('books')
-                         ->join('book_contributors', 'book_contributors.book_id = books.id', 'left')
-                         ->join('users', 'book_contributors.user_id = users.id', 'left')
-                         ->join('reviews', 'reviews.book_id = books.id', 'left')
-                         ->join('book_readers', 'book_readers.book_id = books.id', 'left')
-                         ->where('books.id', $this->input->get('book_id'))
-                         ->group_by('book_readers.user_id')
+        $book = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image, be_books.description, be_books.downloads')
+                         ->select('be_users.id AS author_id, be_users.pseudo, be_users.image AS author_image')
+                         ->select('COUNT(DISTINCT be_book_readers.user_id) nbReads')
+                         ->select('COUNT(DISTINCT be_reviews.user_id) nbComments')
+                         ->select('AVG(DISTINCT be_reviews.note) note')
+                         ->from('be_books')
+                         ->join('be_book_contributors', 'be_book_contributors.book_id = be_books.id', 'left')
+                         ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
+                         ->join('be_reviews', 'be_reviews.book_id = be_books.id', 'left')
+                         ->join('be_book_readers', 'be_book_readers.book_id = be_books.id', 'left')
+                         ->where('be_books.id', $this->input->get('book_id'))
+                         ->group_by('be_book_readers.user_id')
                          ->get()
                          ->row_array();
 
@@ -107,7 +107,7 @@ class Ajax extends CI_Model {
                 'id' => $book['author_id'],
                 'pseudo' => $book['pseudo'],
                 'image' => $book['author_image'],
-                'nbBooks' => $this->db->query('SELECT COUNT(DISTINCT book_contributors.book_id) a FROM book_contributors WHERE user_id = '.$book['author_id'])->row_array()['a'],
+                'nbBooks' => $this->db->query('SELECT COUNT(DISTINCT be_book_contributors.book_id) a FROM be_book_contributors WHERE user_id = '.$book['author_id'])->row_array()['a'],
             ),
             'nbReads' => empty($book['nbReads'])? 0 : $book['nbReads'],
             'nbDL' => empty($book['downloads'])? 0 : $book['downloads'],
@@ -119,58 +119,57 @@ class Ajax extends CI_Model {
 
     public function homeBooks() {
         $userID = $this->isLoggedIn();
-        log_message('error', 'userID homeBooks: '.$userID);
         $recos = array();
         $abos = array();
         $reads = array();
         $mines = array();
 
         if ($userID) {
-            $mines = $this->db->select('books.id, books.title, books.subtitle, books.image')
-                              ->select('users.id AS author_id, users.pseudo AS author')
-                              ->from('books')
-                              ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
-                              ->join('users', 'book_contributors.user_id = users.id', 'left')
-                              ->where('book_contributors.user_id', $userID)
-                              ->order_by('books.updated_at', 'DESC')
+            $mines = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
+                              ->select('be_users.id AS author_id, be_users.pseudo AS author')
+                              ->from('be_books')
+                              ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id', 'left')
+                              ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
+                              ->where('be_book_contributors.user_id', $userID)
+                              ->order_by('be_books.updated_at', 'DESC')
                               ->distinct()
                               ->get()
                               ->result_array();
 
-            $reads = $this->db->select('books.id, books.title, books.subtitle, books.image')
-                              ->select('users.id AS author_id, users.pseudo AS author')
-                              ->from('books')
-                              ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
-                              ->join('users', 'book_contributors.user_id = users.id', 'left')
-                              ->join('book_readers', 'book_readers.user_id = users.id', 'left')     // Ne fonctionnera pas
-                              ->where('book_readers.user_id', $userID)
-                              ->order_by('book_readers.date', 'DESC')
+            $reads = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
+                              ->select('be_users.id AS author_id, be_users.pseudo AS author')
+                              ->from('be_books')
+                              ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id', 'left')
+                              ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
+                              ->join('be_book_readers', 'be_book_readers.user_id = be_users.id', 'left')     // Ne fonctionnera pas
+                              ->where('be_book_readers.user_id', $userID)
+                              ->order_by('be_book_readers.date', 'DESC')
                               ->get()
                               ->result_array();
 
-            $abos = $this->db->select('books.id, books.title, books.subtitle, books.image')
-                              ->select('users.id AS author_id, users.pseudo AS author')
-                              ->from('books')
-                              ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
-                              ->join('users', 'book_contributors.user_id = users.id', 'left')
-                              ->join('user_subscribers', 'user_subscribers.user_id = users.id', 'left')
-                              ->where('user_subscribers.subscriber_id', $userID)
-                              ->order_by('books.created_at', 'DESC')
+            $abos = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
+                              ->select('be_users.id AS author_id, be_users.pseudo AS author')
+                              ->from('be_books')
+                              ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id', 'left')
+                              ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
+                              ->join('be_user_subscribers', 'be_user_subscribers.user_id = be_users.id', 'left')
+                              ->where('be_user_subscribers.subscriber_id', $userID)
+                              ->order_by('be_books.created_at', 'DESC')
                               ->get()
                               ->result_array();
         }
 
         $not_in = array_merge($m = array_column($mines, 'id'),$r = array_column($reads, 'id'),$a = array_column($abos, 'id'));
 
-        $recos = $this->db->select('books.id, books.title, books.subtitle, books.image')
-                         ->select('users.id AS author_id, users.pseudo AS author')
-                         ->from('books')
-                         ->join('book_contributors', 'book_contributors.role_id = 2 AND book_contributors.book_id = books.id', 'left')
-                         ->join('users', 'book_contributors.user_id = users.id', 'left')
+        $recos = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
+                         ->select('be_users.id AS author_id, be_users.pseudo AS author')
+                         ->from('be_books')
+                         ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id', 'left')
+                         ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
                          ->order_by('RAND()')
                          ->limit(10);
 
-        if (!empty($not_in)) $recos->where_not_in('books.id', $not_in);
+        if (!empty($not_in)) $recos->where_not_in('be_books.id', $not_in);
         $recos = $recos->get()
                      ->result_array();
         
@@ -187,13 +186,13 @@ class Ajax extends CI_Model {
         
         return array(
             'books' => array_map(function (&$v) {$v['isMine'] = true; return $v;}, 
-            $this->db->select('books.id, books.title, books.subtitle, books.image')
-                     ->select('users.id AS author_id, users.pseudo AS author')
-                     ->from('books')
-                     ->join('book_contributors', 'book_contributors.book_id = books.id', 'left')
-                     ->join('users', 'book_contributors.user_id = users.id', 'left')
-                     ->where('book_contributors.user_id', $userID)
-                     ->order_by('books.updated_at', 'DESC')
+            $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
+                     ->select('be_users.id AS author_id, be_users.pseudo AS author')
+                     ->from('be_books')
+                     ->join('be_book_contributors', 'be_book_contributors.book_id = be_books.id', 'left')
+                     ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
+                     ->where('be_book_contributors.user_id', $userID)
+                     ->order_by('be_books.updated_at', 'DESC')
                      ->distinct()
                      ->get()
                      ->result_array()
@@ -206,22 +205,49 @@ class Ajax extends CI_Model {
         if (!empty($bid = $this->input->post('id'))) {
             $book = $this->input->post();
             
-            $b = $this->db->where('books.id', $book['id'])
-                          ->update('books', $book);
+            $b = $this->db->where('be_books.id', $book['id'])
+                          ->update('be_books', $book);
         }
 
         if (isset($b) && $b || !empty($bid = $this->input->get('book_id'))) {
-            log_message('error', 'entrée requête b');
-            $a = $this->db->select('books.id, books.title, books.subtitle, books.image, books.description')
-                            ->from('books')
-                            ->join('book_contributors', 'book_contributors.book_id = books.id', 'left')
-                            ->where('book_contributors.user_id', $this->sessionData['id'])
-                            ->where('books.id', $bid)
+            $a = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image, be_books.description')
+                            ->from('be_books')
+                            ->join('be_book_contributors', 'be_book_contributors.book_id = be_books.id', 'left')
+                            ->where('be_book_contributors.user_id', $this->sessionData['id'])
+                            ->where('be_books.id', $bid)
                             ->get()
                             ->row_array();
 
-            log_message('error', 'a: '.print_r($a, true));
             return $a;
         } else return ['status' => false, 'error' => 'Une erreur est survenue pendant le traitement de la requête. Veuillez réessayer plus tard.'];
+    }
+
+    public function search() {
+        $books = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
+                          ->select('be_users.id AS author_id, be_users.pseudo AS author')
+                          ->from('be_books')
+                          ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id', 'left')
+                          ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
+                          ->order_by('be_books.updated_at', 'DESC')
+                          ->distinct();
+
+        if (!empty($this->input->post('title'))) $books->like('be_books.title', $this->input->post('title'));
+        if (!empty($this->input->post('subtitle'))) $books->like('be_books.subtitle', $this->input->post('subtitle'));
+        if (!empty($this->input->post('author'))) $books->like('be_users.pseudo', $this->input->post('author'));
+        
+        if (!empty($this->input->post('generic'))) $books->or_like('CONCAT_WS(\'~\', be_users.pseudo, be_books.title, be_books.subtitle)', $this->input->post('generic'));
+
+        return array('books' => $books->get()->result_array());
+
+    }
+
+    public function read() {
+        return array(
+            $this->db->select('be_books.content')
+                     ->from('be_books')
+                     ->where('be_books.id', $this->input->post('book_id'))
+                     ->get()
+                     ->row_array()['content']
+        ));
     }
 }
