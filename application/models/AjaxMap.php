@@ -120,11 +120,11 @@ class AjaxMap extends CI_Model {
                 )
             )
         ),
-        'read' => array(
+        'bookContent' => array(
             'auth' => false,
             'cors' => array(),
             'params' => array(
-                'post' => array(
+                'get' => array(
                     'mandatory' => array(
                         'book_id',
                     ),

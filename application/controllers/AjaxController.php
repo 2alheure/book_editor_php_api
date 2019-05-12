@@ -37,9 +37,9 @@ class AjaxController extends CI_Controller {
                 
             } else {
                 // Checker domaine (CORS)
-                if ($this->checkCORS($mapping)) {
-                    if ($this->input->method(true) == 'OPTIONS') return;
-                    
+                if ($this->input->method(true) == 'OPTIONS') return;
+                
+                // if ($this->checkCORS($mapping)) {
                     // Checker les paramètres de la requête
                     if (!$this->checkParams($mapping)) {
                         log_message('error', 'Bad parameters for method '.$segment.'. Got GET ['.implode(', ', array_keys($this->input->get())).'] and POST ['.implode(', ', array_keys($this->input->post())).']');
@@ -74,7 +74,7 @@ class AjaxController extends CI_Controller {
                             log_message('error', '-------------------------------------------------------------------------------------');
                         }
                     }
-                }
+                // }
             }
         }
     }

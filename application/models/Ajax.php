@@ -238,16 +238,23 @@ class Ajax extends CI_Model {
         if (!empty($this->input->post('generic'))) $books->or_like('CONCAT_WS(\'~\', be_users.pseudo, be_books.title, be_books.subtitle)', $this->input->post('generic'));
 
         return array('books' => $books->get()->result_array());
-
     }
 
-    public function read() {
-        return array(
-            $this->db->select('be_books.content')
+    public function bookContent() {
+        $book = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
+                     ->select('be_books.content')
                      ->from('be_books')
-                     ->where('be_books.id', $this->input->post('book_id'))
+                     ->where('be_books.id', $this->input->get('book_id'))
                      ->get()
-                     ->row_array()['content']
-        ));
+                     ->row_array();
+        return array(
+            'meta' => array(
+                'id' => $book['id'],
+                'title' => $book['title'],
+                'subtitle' => $book['subtitle'],
+                'image' => $book['image'],
+            ),
+            'content' => json_decode($book['content'], true)
+        );
     }
 }
