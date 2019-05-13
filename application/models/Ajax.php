@@ -173,6 +173,8 @@ class Ajax extends CI_Model {
         $recos = $recos->get()
                      ->result_array();
         
+        foreach ($mines as &$mine) $mine['isMine'] = true;
+
         return array(
             'booksReco' => $recos,
             'booksSub' => $abos,
