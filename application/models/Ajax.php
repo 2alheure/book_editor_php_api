@@ -5,7 +5,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * This class handles all the methods used to obtain data for AJAX calls.
  */
 class Ajax extends CI_Model {
-    protected $user;
     protected $sessionData;
 
     public function __construct() {
@@ -203,15 +202,39 @@ class Ajax extends CI_Model {
 
     }
 
+    public function bookInsert() {
+        $book = $this->input->post();
+        if ($this->db->insert('be_books', $book)) {
+            $bid = $this->db->insert_id();
+            $this->db->insert('be_book_contributors', array(
+                'book_id' => $bid,
+                'user_id' => $this->sessionData['id']
+            ));
+
+            return ['id' => $bid];
+        } else return array(
+            'status' => false,
+            'error' => 'Impossible de créer un livre avec ces données.'
+        );
+    }
+
     public function bookEdit() {
         if (!empty($bid = $this->input->post('id'))) {
             $book = $this->input->post();
             
             $b = $this->db->where('be_books.id', $book['id'])
-                          ->update('be_books', $book);
+                            ->update('be_books', $book);
         }
 
         if (isset($b) && $b || !empty($bid = $this->input->get('book_id'))) {
+            if ($bid == 'new') return array(
+                'id' => null,
+                'title' => null,
+                'subtitle' => null,
+                'image' => null,
+                'description' => null,
+            );
+
             $a = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image, be_books.description')
                             ->from('be_books')
                             ->join('be_book_contributors', 'be_book_contributors.book_id = be_books.id', 'left')
