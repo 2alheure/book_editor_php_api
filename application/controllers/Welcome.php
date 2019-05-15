@@ -20,6 +20,21 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-		$this->load->view('welcome_message');
+		$lv_test = explode('/', 'root/2');
+
+		$json = json_decode(file_get_contents(BASEPATH.'../l-art-de-la-guerre.json'), true);
+		pr($json, 'json');
+
+		$get = getJSON($json, $lv_test);
+		pr($get, 'get');
+
+		$delete = deleteJSON($json, $lv_test);
+		pr($delete, 'delete');
+
+		$newOne_test = array(
+			'CECI EST UN ARRAY DE TEST'
+		);
+		$update = updateJSON($json, $lv_test, $newOne_test);
+		pr($update, 'update');
 	}
 }

@@ -174,15 +174,6 @@ function not_empty($array) {
 	return $ret;
 }
 
-/**
- * This function aims to do multiple operations on a json object. This operation depends of the value of $operation.
- * $operation = get
- * 		Checks whether the $position is set in $json and return its value (or false if doesn't exist).
- * $operation = del
- * 		If $position exists into $json, deletes the item at $position and all its children.
- * $operation = set
- * 		If $position exists into $json, sets the item at $position to the value of $new_one. 
- */
 function getJSON($json = [], $position = 'root') {
 	// pr($position);
 	if ((!is_array($position) && $position != 'root') || $position[0] != 'root') return false;
@@ -194,7 +185,50 @@ function getJSON($json = [], $position = 'root') {
 			default: {
 				if (isset($json[$position[1]]['content']))
 					return [getJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)))];
-				else return false;
+			}
+		}
+	}
+	return false;
+}
+
+function deleteJSON($json = [], $position = 'root') {
+	if ((!is_array($position) && $position != 'root') || $position[0] != 'root') return false;
+	else {
+		switch (sizeof($position)) {
+			case 0: return false;	// Not valid
+			case 1: return null;	// = root
+			case 2: if (isset($json[$position[1]])) {
+					unset($json[$position[1]]);
+					return $json;
+				} 
+				break;
+			default: {
+				if (isset($json[$position[1]]['content'])) {
+					$json[$position[1]]['content'] = deleteJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)));
+					return $json;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+function updateJSON($json = [], $position = 'root', $newOne = []) {
+	if (!is_array($newOne) || empty($newOne) || (!is_array($position) && $position != 'root') || $position[0] != 'root') return false;
+	else {
+		switch (sizeof($position)) {
+			case 0: return false;	// Not valid
+			case 1: return $newOne;	// = root
+			case 2: if (isset($json[$position[1]])) {
+					$json[$position[1]] = $newOne;
+					return $json;
+				} 
+				break;
+			default: {
+				if (isset($json[$position[1]]['content'])) {
+					$json[$position[1]]['content'] = updateJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)), $newOne);
+					return $json;
+				}
 			}
 		}
 	}
