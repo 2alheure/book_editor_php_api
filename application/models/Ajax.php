@@ -26,51 +26,6 @@ class Ajax extends CI_Model {
     }
 
     /**
-     * This function aims to do multiple operations on a json object. This operation depends of the value of $operation.
-     * $operation = get
-     * 		Checks whether the $position is set in $json and return its value (or false if doesn't exist).
-     * $operation = del
-     * 		If $position exists into $json, deletes the item at $position and all its children.
-     * $operation = set
-     * 		If $position exists into $json, sets the item at $position to the value of $new_one. 
-     */
-    protected function operateJSON($json = [], $position = 'root', $operation = 'get', $new_one = []) {
-        // pr($position);
-        if ((!is_array($position) && $position != 'root') || $position[0] != 'root') return false;
-        else {
-            switch (sizeof($position)) {
-                case 0: return false;	// Not valid
-                case 1: {
-                        switch ($operation) {
-                            case 'get': return $json;	// = root
-                            case 'del': 
-
-                        }
-                        case 2: {
-                            return isset($json[$position[1]])? $json[$position[1]] : false;
-                        }
-                        default: {
-                            if (isset($json[$position[1]]['content']))
-                                return getJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)), $operation, $new_one);
-                            else return false;
-                        }
-                    }
-                }
-                break;
-                case 'del': {
-                    if 
-                }
-                break;
-                case 'set': {
-                    
-                }
-                break;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Example of method which can be used. Each one has the same pattern.
      * It can use the body and url parameters.
      * It will receive only what's needed, due to the map of the AjaxMAP model.
@@ -87,7 +42,7 @@ class Ajax extends CI_Model {
 
         return array(
             'status' => true,
-            'content' => $this->operateJSON(
+            'content' => getJSON(
                 json_decode($json, true), 
                 $position
             )
@@ -334,7 +289,10 @@ class Ajax extends CI_Model {
                 'subtitle' => $book['subtitle'],
                 'image' => $book['image'],
             ),
-            'content' => json_decode($book['content'], true)
+            'content' => getJSON(
+                json_decode($book['content'], true),
+                not_empty(explode('/', $this->input->get('position')))
+            )
         );
     }
 }

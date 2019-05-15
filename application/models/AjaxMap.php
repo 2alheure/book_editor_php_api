@@ -125,6 +125,7 @@ class AjaxMap extends CI_Model {
                 'get' => array(
                     'mandatory' => array(
                         'book_id',
+                        'position',
                     ),
                 )
             )
