@@ -70,8 +70,8 @@ class AjaxController extends CI_Controller {
 
                                 $this->stdJSONMessage($ret, 200, true);
                             }
-                            log_message('error', $this->db->last_query());
-                            log_message('error', '-------------------------------------------------------------------------------------');
+                            // log_message('error', $this->db->last_query());
+                            // log_message('error', '-------------------------------------------------------------------------------------');
                         }
                     }
                 // }

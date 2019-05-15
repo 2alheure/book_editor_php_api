@@ -9,34 +9,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class AjaxMap extends CI_Model {
     private $map = array(
         'test' => array(
-            'auth' => true,
-            'cors' => array(
-                'http://example.com:80',
-                'https://example.com:80',
-                'https://example.com:8000',
-                'https://test.fr:80',
-            ),
+            'auth' => false,
+            'cors' => array(),
             'params' => array(
                 'get' => array(
                     'mandatory' => array(
-                        // 'param1',
-                        // 'param2',
+                        'position',
+                        'book_id'
                     ),
-                    'optional' => array(
-                        // 'param3',
-                        // 'param4',
-                    )
+                    'optional' => array()
                 ),
-                'post' => array(
-                    'mandatory' => array(
-                        // 'param1',
-                        // 'param2',
-                    ),
-                    'optional' => array(
-                        // 'param3',
-                        // 'param4',
-                    )
-                )
             )
         ),
         'signin' => array(

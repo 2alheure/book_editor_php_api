@@ -17,56 +17,6 @@ function toRelative($link) {
 	else return '../../assets/'.$link;
 }
 
-function printFlashMessages() {
-	if (!empty($_SESSION['errors'])) {
-		foreach($_SESSION['errors'] as $name => $message) { ?>
-			<div class="alert alert-danger" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<b><?= ucfirst($name) ?>&nbsp;: </b><?= $message ?>
-			</div>
-		<?php }
-		unset($_SESSION['errors']);
-	}
-	
-	if (!empty($_SESSION['warnings'])) {
-		foreach($_SESSION['warnings'] as $name => $message) { ?>
-			<div class="alert alert-warning" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<b><?= ucfirst($name) ?>&nbsp;: </b><?= $message ?>
-			</div>
-		<?php }
-		unset($_SESSION['warnings']);
-	}
-	
-	if (!empty($_SESSION['infos'])) {
-		foreach($_SESSION['infos'] as $name => $message) { ?>
-			<div class="alert alert-primary" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<b><?= ucfirst($name) ?>&nbsp;: </b><?= $message ?>
-			</div>
-		<?php }
-		unset($_SESSION['infos']);
-	}
-
-	if (!empty($_SESSION['success'])) {
-		foreach($_SESSION['success'] as $name => $message) { ?>
-			<div class="alert alert-success" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<b><?= ucfirst($name) ?>&nbsp;: </b><?= $message ?>
-			</div>
-		<?php }
-		unset($_SESSION['success']);
-	}
-}
-
 function unwrap_array($array = null, $depth = -1) {
 	if (empty($array)) return null;
 
@@ -214,4 +164,12 @@ function arrayWithoutKey($array = null, $keys = null) {
 	if (!is_array($keys)) $keys = [$keys];
 
 	return array_diff_key($array, array_flip($keys));
+}
+
+function not_empty($array) {
+	$ret = array();
+	foreach ($array as $i => $item) {
+		if ($item != null && $item != '') $ret[] = $item;
+	}
+	return $ret;
 }
