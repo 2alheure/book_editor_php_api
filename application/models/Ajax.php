@@ -277,11 +277,22 @@ class Ajax extends CI_Model {
 
     public function bookContent() {
         $book = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
-                     ->select('be_books.content')
+                     ->select('be_books.content, be_book_contributors.user_id AS author_id')
                      ->from('be_books')
+                     ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id')
                      ->where('be_books.id', $this->input->get('book_id'))
                      ->get()
                      ->row_array();
+
+        if ($this->isLoggedIn() && $book['author_id'] != $this->sessionData['id']) {
+            $this->db->replace('be_book_readers', array(
+                'user_id' => $this->sessionData['id'],
+                'book_id' => $this->input->get('book_id'),
+            ));
+        }
+
+        $getJson = getJSON(json_decode($book['content'], true), not_empty(explode('/', $this->input->get('position'))));
+
         return array(
             'meta' => array(
                 'id' => $book['id'],
@@ -289,10 +300,79 @@ class Ajax extends CI_Model {
                 'subtitle' => $book['subtitle'],
                 'image' => $book['image'],
             ),
-            'content' => getJSON(
-                json_decode($book['content'], true),
-                not_empty(explode('/', $this->input->get('position')))
-            )
+            'content' => [$getJson]
         );
+    }
+
+    public function updateBloc() {
+        $json = $this->db->select('content')
+                        ->from('be_books')
+                        ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id')
+                        ->where('be_book_contributors.user_id', $this->sessionData['id'])
+                        ->where('be_books.id', $this->input->get('book_id'))
+                        ->get()
+                        ->row_array()['content'];
+
+        $json = json_decode($json, true);
+        
+        if (empty($json)) return array(
+            'status' => false,
+            'error' => 'Impossible de récupérer les informations sur ce livre pour cet utilisateur.'
+        );
+
+        else {
+            $position = explode('/', $this->input->get('position'));
+            $isNew = $position[sizeof($position)-1] == 'new';
+            if ($isNew) $position = array_slice($position, 0, -1);
+            
+            $getJson = getJSON($json, $position);
+
+            if ($getJson === false) return array(
+                'status' => false,
+                'error' => 'Une erreur est survenue pendant le traitement de la requête. Traitement impossible.'
+            );
+
+            if ($isNew) {
+                $content = $getJson;
+                $content['content'][] = json_decode($this->input->post('content'), true);
+            } else $content = json_decode($this->input->post('content'), true);
+
+            $updateJson = updateJson($json, $position, $content);
+            if (!$updateJson || !$this->db->where('be_books.id', $this->input->get('book_id'))->update('be_books', ['content' => json_encode($updateJson), 'updated_at' => null]))  {
+                
+                return array(
+                    'status' => false,
+                    'error' => 'Une erreur est survenue pendant le traitement de la requête. Modification du livre impossible.'
+                );
+            } else return ['content' => $updateJson];
+        }
+    }
+
+    public function deleteBloc() {
+        $json = $this->db->select('content')
+                        ->from('be_books')
+                        ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id')
+                        ->where('be_book_contributors.user_id', $this->sessionData['id'])
+                        ->where('be_books.id', $this->input->get('book_id'))
+                        ->get()
+                        ->row_array()['content'];
+
+        $json = json_decode($json, true);
+
+        if (empty($json)) return array(
+            'status' => false,
+            'error' => 'Impossible de récupérer les informations sur ce livre pour cet utilisateur.'
+        );
+
+        else {
+            $position = explode('/', $this->input->get('position'));
+            $deleteJson = deleteJson($json, $position);
+
+            if (!$deleteJson || !$this->db->where('be_books.id', $this->input->get('book_id'))->update('be_books', ['content' => json_encode($deleteJson), 'updated_at' => null])) return array(
+                'status' => false,
+                'error' => 'Une erreur est survenue pendant le traitement de la requête. Suppression impossible.'
+            );
+            else return ['content' => $deleteJson];
+        }
     }
 }

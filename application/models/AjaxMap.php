@@ -130,6 +130,35 @@ class AjaxMap extends CI_Model {
                 )
             )
         ),
+        'updateBloc' => array(
+            'auth' => true,
+            'cors' => array(),
+            'params' => array(
+                'get' => array(
+                    'mandatory' => array(
+                        'book_id',
+                        'position',
+                    ),
+                ),
+                'post' => array(
+                    'mandatory' => array(
+                        'content',
+                    ),
+                )
+            )
+        ),
+        'deleteBloc' => array(
+            'auth' => true,
+            'cors' => array(),
+            'params' => array(
+                'get' => array(
+                    'mandatory' => array(
+                        'book_id',
+                        'position',
+                    ),
+                ),
+            )
+        ),
 
     );
 

@@ -181,16 +181,17 @@ function getJSON($json = [], $position = 'root') {
 		switch (sizeof($position)) {
 			case 0: return false;	// Not valid
 			case 1: return $json;	// = root
-			case 2: return isset($json[$position[1]])? [$json[$position[1]]] : false;
+			case 2: return isset($json[$position[1]])? $json[$position[1]] : false;
 			default: {
 				if (isset($json[$position[1]]['content']))
-					return [getJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)))];
+					return getJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)));
 			}
 		}
 	}
 	return false;
 }
 
+// TODO : vérifier fonction
 function deleteJSON($json = [], $position = 'root') {
 	if ((!is_array($position) && $position != 'root') || $position[0] != 'root') return false;
 	else {
@@ -199,13 +200,15 @@ function deleteJSON($json = [], $position = 'root') {
 			case 1: return null;	// = root
 			case 2: if (isset($json[$position[1]])) {
 					unset($json[$position[1]]);
-					return $json;
 				} 
-				break;
+				return $json;
 			default: {
 				if (isset($json[$position[1]]['content'])) {
-					$json[$position[1]]['content'] = deleteJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)));
-					return $json;
+					$del = deleteJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)));
+					if ($del !== false) {			// Léger doute par ici !!
+						$json[$position[1]]['content'] = $del;
+						return $json;
+					} else return false;
 				}
 			}
 		}
