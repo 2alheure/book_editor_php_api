@@ -345,7 +345,7 @@ class Ajax extends CI_Model {
                     'status' => false,
                     'error' => 'Une erreur est survenue pendant le traitement de la requête. Modification du livre impossible.'
                 );
-            } else return ['content' => $updateJson];
+            } else return ['status' => true];
         }
     }
 
@@ -373,7 +373,7 @@ class Ajax extends CI_Model {
                 'status' => false,
                 'error' => 'Une erreur est survenue pendant le traitement de la requête. Suppression impossible.'
             );
-            else return ['content' => $deleteJson];
+            else return ['status' => true];
         }
     }
 }
