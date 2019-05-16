@@ -150,11 +150,12 @@ class Ajax extends CI_Model {
                               ->from('be_books')
                               ->join('be_book_contributors', 'be_book_contributors.role_id = 2 AND be_book_contributors.book_id = be_books.id', 'left')
                               ->join('be_users', 'be_book_contributors.user_id = be_users.id', 'left')
-                              ->join('be_book_readers', 'be_book_readers.user_id = be_users.id', 'left')     // Ne fonctionnera pas
+                              ->join('be_book_readers', 'be_book_readers.book_id = be_books.id', 'left')     // Ne fonctionnera pas
                               ->where('be_book_readers.user_id', $userID)
                               ->order_by('be_book_readers.date', 'DESC')
                               ->get()
                               ->result_array();
+                              log_message('error',$this->db->last_query());
 
             $abos = $this->db->select('be_books.id, be_books.title, be_books.subtitle, be_books.image')
                               ->select('be_users.id AS author_id, be_users.pseudo AS author')
@@ -300,7 +301,7 @@ class Ajax extends CI_Model {
                 'subtitle' => $book['subtitle'],
                 'image' => $book['image'],
             ),
-            'content' => [$getJson]
+            'content' => $this->input->get('position')=='root'? $getJson : [$getJson]
         );
     }
 

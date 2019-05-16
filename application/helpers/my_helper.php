@@ -201,7 +201,7 @@ function deleteJSON($json = [], $position = 'root') {
 			case 2: if (isset($json[$position[1]])) {
 					unset($json[$position[1]]);
 				} 
-				return $json;
+				return array_values($json);
 			default: {
 				if (isset($json[$position[1]]['content'])) {
 					$del = deleteJSON($json[$position[1]]['content'], array_merge(['root'], array_slice($position, 2)));
