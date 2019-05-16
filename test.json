@@ -1,24 +1,19 @@
-[
-    {
-        "type": "container",
-        "title": "Test lv1",
-        "content": [
-            {
-                "type": "container",
-                "title": "Test lv2",
-                "content": [
-                    {
-                        "type": "container",
-                        "title": "Test lv3",
-                        "content": [
-                            {
-                                "type": "paragraphe",
-                                "value": "Enfin un paragraphe"
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
-]
+{
+    "type": "container",
+    "title": "Chapitre II : La mare aux larmes",
+    "content": [
+        {
+            "type": "paragraphe",
+            "value": "Paragraphe"
+        },
+        {
+            "type": "image",
+            "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Alice_par_John_Tenniel_02.png/375px-Alice_par_John_Tenniel_02.png",
+            "alt": ""
+        },
+        {
+            "type": "paragraphe",
+            "value": "Paragraphe"
+        }
+    ]
+}
